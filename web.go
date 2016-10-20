@@ -1,13 +1,7 @@
 package main
 
-import (
-	"log"
-)
-
-func queryClientAddr(url string) (string, error) {
-	if debug {
-		log.Printf("[web]: url is %q\n", url)
-	}
+func queryClientAddr(url string) (control, data string, err error) {
+	Debug.Printf("[web]: url is %q\n", url)
 	// TODO
-	return "", nil
+	return "", "", nil
 }

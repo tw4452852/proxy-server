@@ -2,51 +2,55 @@ package main
 
 import (
 	"flag"
-	"log"
+	"fmt"
 	"os"
 )
 
 var (
-	configPath string
-	debug      bool
-	// TODO: remove this when release
-	clientAddr string
+	clientControlAddr string
+	clientDataAddr    string
+	pluginAddr        string
+	help              bool
 )
 
 func init() {
-	flag.StringVar(&configPath, "c", "config.toml", "config file")
-	flag.StringVar(&clientAddr, "t", "", "client address")
-	flag.BoolVar(&debug, "d", false, "debug log")
+	flag.BoolVar(&help, "h", false, "show help")
+	flag.StringVar(&clientControlAddr, "cc", "", "client control address")
+	flag.StringVar(&clientDataAddr, "cd", "", "client data address")
+	flag.StringVar(&pluginAddr, "p", "", "plugin address")
+	flag.BoolVar((*bool)(&Debug), "d", false, "debug log")
 }
 
 func main() {
 	flag.Parse()
 
-	// TODO: remove this when release
-	if clientAddr == "" {
-		clientAddr, err := getClientAddr(configPath)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		log.Fatal(clientLoop(clientAddr))
+	if help {
+		flag.Usage()
+		os.Exit(1)
 	}
-}
 
-func getClientAddr(cp string) (string, error) {
-	// open the config file
-	f, err := os.Open(cp)
+	if clientControlAddr == "" {
+		fmt.Println("client control address is nil")
+		os.Exit(1)
+	}
+	if clientDataAddr == "" {
+		fmt.Println("client data address is nil")
+		os.Exit(1)
+	}
+	if pluginAddr == "" {
+		fmt.Println("plugin address is nil")
+		os.Exit(1)
+	}
+
+	s, err := NewServer(pluginAddr, clientControlAddr, clientDataAddr)
 	if err != nil {
-		return "", err
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	defer f.Close()
 
-	// get the config
-	c, err := getConfig(f)
+	err = s.Loop()
 	if err != nil {
-		return "", err
+		fmt.Println(err)
+		os.Exit(1)
 	}
-
-	// query the web
-	return queryClientAddr(c.Web.Url)
 }
