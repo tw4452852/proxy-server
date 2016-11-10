@@ -42,7 +42,6 @@ func TestNewServer(t *testing.T) {
 			pluginAddr:  sa,
 			controlAddr: "127.0.0.1:1",
 			dataAddr:    sa,
-			err:         setupTunnelErr,
 		},
 	} {
 		c := c
@@ -164,6 +163,7 @@ func TestCheckTunnel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-s.tunnelErr
 	defer s.cancel()
 
 	r, w := net.Pipe()
@@ -229,6 +229,30 @@ func TestHandleTunnelErr(t *testing.T) {
 	if err == nil {
 		t.Fatal("not get expected error")
 	}
+	expect := TLV{T: pTunnelReconnectFailed, L: 0, V: []byte{}}
+	got, err := ReadTLV(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got, expect) {
+		t.Fatalf("expect %#v, but got %#v", expect, got)
+	}
+}
+
+func TestSetupTunnelFailureFirstTime(t *testing.T) {
+	s, err := NewServer("", "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.cancel()
+
+	r, w := net.Pipe()
+	s.pluginConn = w
+
+	// mock a failed setup
+	s.tunnelAddr = "127.0.0.1:1"
+	go s.Loop()
+
 	expect := TLV{T: pTunnelReconnectFailed, L: 0, V: []byte{}}
 	got, err := ReadTLV(r)
 	if err != nil {
