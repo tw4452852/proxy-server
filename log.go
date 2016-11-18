@@ -25,3 +25,9 @@ func (d DebugLog) Println(args ...interface{}) {
 		log.Println(args...)
 	}
 }
+
+func (d DebugLog) SetPrefix(prefix string) {
+	if d {
+		log.SetPrefix(prefix)
+	}
+}

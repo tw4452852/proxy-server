@@ -41,6 +41,7 @@ func main() {
 		fmt.Println("plugin address is nil")
 		os.Exit(1)
 	}
+	Debug.SetPrefix("[" + pluginAddr + "]")
 
 	s, err := NewServer(pluginAddr, clientControlAddr, clientDataAddr)
 	if err != nil {
