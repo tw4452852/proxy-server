@@ -69,6 +69,12 @@ func TestPutPluginRequest(t *testing.T) {
 			},
 			expect: []byte{0, pTunnelReconnectFailed, 0, 0},
 		},
+		"TunnelConnectOk": {
+			data: &Request{
+				Typ: TunnelConnectOk,
+			},
+			expect: []byte{0, pTunnelConnectOk, 0, 0},
+		},
 	} {
 		c := c
 		t.Run(name, func(t *testing.T) {

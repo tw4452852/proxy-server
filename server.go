@@ -148,6 +148,8 @@ func (s *srv) pollTunnel() {
 		Debug.Println("[server]: tunnel poller exits")
 	}()
 
+	s.reqs <- &Request{Typ: TunnelConnectOk}
+
 	for {
 		select {
 		case <-s.tunnelCtx.Done():
@@ -243,6 +245,7 @@ const (
 	TaskResult
 	TunnelReconnectFailed
 	Ping
+	TunnelConnectOk
 )
 
 type Request struct {
@@ -265,6 +268,8 @@ func (s *srv) handleRequest(req *Request) {
 	case Ping:
 		// ping ack, do nothing
 		Debug.Println("[server]: recv ping ack")
+	case TunnelConnectOk:
+		go s.putPluginRequest(req)
 	default:
 		log.Printf("[server]: unknown request type[%x]\n", req.Typ)
 	}

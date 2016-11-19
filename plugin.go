@@ -11,6 +11,7 @@ const (
 	pPushTask              = 0x1002
 	pTaskResult            = 1
 	pTunnelReconnectFailed = 2
+	pTunnelConnectOk       = 3
 )
 
 var unknownTypeErr = errors.New("unknow type")
@@ -47,6 +48,9 @@ func PutPluginRequest(w io.Writer, req *Request) error {
 		tlv.V = req.TaskData
 	case TunnelReconnectFailed:
 		tlv.T = pTunnelReconnectFailed
+		tlv.V = []byte{}
+	case TunnelConnectOk:
+		tlv.T = pTunnelConnectOk
 		tlv.V = []byte{}
 	default:
 		log.Printf("[plugin]: unknown type[%#x]\n", req.Typ)

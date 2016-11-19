@@ -125,12 +125,18 @@ func TestPollTunnel(t *testing.T) {
 		ret <- struct{}{}
 	}()
 
+	// check tunnel connect done msg
+	expect := &Request{Typ: TunnelConnectOk}
+	if got := <-s.reqs; !reflect.DeepEqual(got, expect) {
+		t.Fatalf("expect request %#v, but got %#v", expect, got)
+	}
+
 	// mock a TaskResult request
 	err = WriteTLV(w, TLV{T: tTask, L: 1, V: []byte{2}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	expect := &Request{
+	expect = &Request{
 		Typ:      TaskResult,
 		TaskData: []byte{2},
 	}
