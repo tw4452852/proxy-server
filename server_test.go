@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"reflect"
 	"testing"
@@ -267,5 +268,28 @@ func TestSetupTunnelFailureFirstTime(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, expect) {
 		t.Fatalf("expect %#v, but got %#v", expect, got)
+	}
+}
+
+func TestHandleRequest(t *testing.T) {
+	s, err := NewServer("", "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.cancel()
+	conn, _ := net.Pipe()
+	s.pluginConn = conn
+	s.tunnelConn = conn
+
+	for i := CreateSSConnect; i < TypeEnd; i++ {
+		i := i
+		t.Run(fmt.Sprintf("type-%d", int(i)), func(t *testing.T) {
+			t.Parallel()
+
+			err := s.handleRequest(&Request{Typ: i})
+			if err != nil {
+				t.Error(err)
+			}
+		})
 	}
 }

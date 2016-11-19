@@ -248,6 +248,8 @@ const (
 	TunnelReconnectFailed
 	Ping
 	TunnelConnectOk
+
+	TypeEnd
 )
 
 type Request struct {
@@ -256,7 +258,7 @@ type Request struct {
 	TaskData  []byte
 }
 
-func (s *srv) handleRequest(req *Request) {
+func (s *srv) handleRequest(req *Request) error {
 	Debug.Printf("[server]: handle request [%#v]\n", req)
 	switch req.Typ {
 	case CreateSSConnect:
@@ -276,9 +278,12 @@ func (s *srv) handleRequest(req *Request) {
 		go s.putPluginRequest(req)
 	default:
 		log.Printf("[server]: unknown request type[%x]\n", req.Typ)
+		return unknownTypeErr
 	}
+	return nil
 }
 
+// helpers
 func (s *srv) putCtrRequest(req *Request) error {
 	return PutCtrRequest(s.tunnelConn, req)
 }
