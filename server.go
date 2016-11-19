@@ -227,7 +227,9 @@ func (s *srv) handleTunnelErr(err error) error {
 	}
 
 	log.Printf("[server]: reconnect failure: %s\n", reconnectErr)
-	go s.putPluginRequest(&Request{Typ: TunnelReconnectFailed})
+	go func() {
+		s.reqs <- &Request{Typ: TunnelReconnectFailed}
+	}()
 	return reconnectErr
 }
 
@@ -264,6 +266,8 @@ func (s *srv) handleRequest(req *Request) {
 	case PushTask:
 		go s.putCtrRequest(req)
 	case TaskResult:
+		go s.putPluginRequest(req)
+	case TunnelReconnectFailed:
 		go s.putPluginRequest(req)
 	case Ping:
 		// ping ack, do nothing

@@ -227,6 +227,7 @@ func TestHandleTunnelErr(t *testing.T) {
 		t.Fatalf("got unexpected error: %v", err)
 	}
 
+	go s.Loop()
 	// mock a failed reconnection
 	r, w := net.Pipe()
 	s.pluginConn = w
