@@ -35,6 +35,7 @@ var (
 	tunnelTimeoutErr = errors.New("tunnel ping timeout")
 	setupPluginErr   = errors.New("setup plugin failed")
 	setupTunnelErr   = errors.New("setup tunnel failed")
+	pluginExitErr    = errors.New("to be killed")
 )
 
 func NewServer(pluginAddr, controlAddr, dataAddr string) (*srv, error) {
@@ -248,6 +249,7 @@ const (
 	TunnelReconnectFailed
 	Ping
 	TunnelConnectOk
+	Exit
 
 	TypeEnd
 )
@@ -276,6 +278,10 @@ func (s *srv) handleRequest(req *Request) error {
 		Debug.Println("[server]: recv ping ack")
 	case TunnelConnectOk:
 		go s.putPluginRequest(req)
+	case Exit:
+		go func() {
+			s.pluginErr <- pluginExitErr
+		}()
 	default:
 		log.Printf("[server]: unknown request type[%x]\n", req.Typ)
 		return unknownTypeErr

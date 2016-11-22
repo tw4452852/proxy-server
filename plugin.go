@@ -9,6 +9,7 @@ import (
 const (
 	pPushTaskRecv          = 0x1001
 	pPushTask              = 0x1002
+	pExit                  = 0x1003
 	pTaskResult            = 1
 	pTunnelReconnectFailed = 2
 	pTunnelConnectOk       = 3
@@ -34,6 +35,8 @@ func GetPluginRequest(r io.Reader) (*Request, error) {
 			Typ:      PushTask,
 			TaskData: tlv.V,
 		}, nil
+	case pExit:
+		return &Request{Typ: Exit}, nil
 	default:
 		log.Printf("[plugin]: unknow type[%#x]\n", tlv.T)
 		return nil, unknownTypeErr

@@ -30,6 +30,12 @@ func TestGetPluginRequest(t *testing.T) {
 				TaskData: []byte{3, 4},
 			},
 		},
+		"Exit": {
+			data: []byte{0x10, 0x03, 0, 0},
+			expect: &Request{
+				Typ: Exit,
+			},
+		},
 	} {
 		c := c
 		t.Run(name, func(t *testing.T) {
