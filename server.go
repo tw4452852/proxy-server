@@ -61,8 +61,8 @@ func NewServer(pluginAddr, controlAddr, dataAddr string) (*srv, error) {
 		return nil, setupPluginErr
 	}
 
-	// just queue a fake error for setup tunnel firstly
-	s.tunnelErr <- setupTunnelErr
+	// just queue a fake error for tunnel setup then
+	s.tunnelErr <- nil
 
 	return s, nil
 }
