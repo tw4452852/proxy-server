@@ -54,12 +54,6 @@ func WriteTLV(w io.Writer, tlv TLV) error {
 	return nil
 }
 
-var (
-	readTypeErr = errors.New("read type error")
-	readLenErr  = errors.New("read length error")
-	readValErr  = errors.New("read value error")
-)
-
 func ReadTLV(r io.Reader) (tlv TLV, err error) {
 	var (
 		t uint16
@@ -70,14 +64,12 @@ func ReadTLV(r io.Reader) (tlv TLV, err error) {
 	err = binary.Read(r, binary.BigEndian, &t)
 	if err != nil {
 		log.Printf("[tlv]: read type error: %s\n", err)
-		err = readTypeErr
 		return
 	}
 
 	err = binary.Read(r, binary.BigEndian, &l)
 	if err != nil {
 		log.Printf("[tlv]: read length error: %s\n", err)
-		err = readLenErr
 		return
 	}
 
@@ -85,7 +77,6 @@ func ReadTLV(r io.Reader) (tlv TLV, err error) {
 	err = binary.Read(r, binary.BigEndian, &v)
 	if err != nil {
 		log.Printf("[tlv]: read value error: %s\n", err)
-		err = readValErr
 		return
 	}
 

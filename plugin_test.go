@@ -8,13 +8,13 @@ import (
 
 func TestGetPluginRequest(t *testing.T) {
 	for name, c := range map[string]struct {
-		data   []byte
-		err    error
-		expect *Request
+		data      []byte
+		expectErr bool
+		expect    *Request
 	}{
 		"readErr": {
-			data: []byte{0xff},
-			err:  readTypeErr,
+			data:      []byte{0xff},
+			expectErr: true,
 		},
 		"PushTaskRecv": {
 			data: []byte{0x10, 0x01, 0, 0x4, 0, 0, 0, 1},
@@ -42,8 +42,8 @@ func TestGetPluginRequest(t *testing.T) {
 			t.Parallel()
 
 			got, err := GetPluginRequest(bytes.NewReader(c.data))
-			if err != c.err {
-				t.Errorf("expect error %v, but got %v", c.err, err)
+			if (err != nil) != c.expectErr {
+				t.Errorf("expect error %v, but got %v", c.expectErr, err)
 			}
 			if !reflect.DeepEqual(c.expect, got) {
 				t.Errorf("expect %#v, but got %#v", c.expect, got)

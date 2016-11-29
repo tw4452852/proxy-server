@@ -46,21 +46,21 @@ func TestWriteTLV(t *testing.T) {
 
 func TestReadTLV(t *testing.T) {
 	for name, c := range map[string]struct {
-		data   []byte
-		err    error
-		expect TLV
+		data      []byte
+		expectErr bool
+		expect    TLV
 	}{
-		"readTypeErr": {
-			data: []byte{1},
-			err:  readTypeErr,
+		"readTypeexpectErr": {
+			data:      []byte{1},
+			expectErr: true,
 		},
-		"readLenErr": {
-			data: []byte{1, 2, 3},
-			err:  readLenErr,
+		"readLenexpectErr": {
+			data:      []byte{1, 2, 3},
+			expectErr: true,
 		},
-		"readValErr": {
-			data: []byte{1, 2, 3, 4, 5},
-			err:  readValErr,
+		"readValexpectErr": {
+			data:      []byte{1, 2, 3, 4, 5},
+			expectErr: true,
 		},
 		"zeroLength": {
 			data:   []byte{0, 1, 0, 0},
@@ -78,8 +78,8 @@ func TestReadTLV(t *testing.T) {
 			b := bytes.NewBuffer(c.data)
 
 			got, err := ReadTLV(b)
-			if err != c.err {
-				t.Errorf("expect error %v, but got %v", c.err, err)
+			if (err != nil) != c.expectErr {
+				t.Errorf("expect error %v, but got %v", c.expectErr, err)
 			}
 			if !reflect.DeepEqual(got, c.expect) {
 				t.Errorf("expect result %v, but got %v", c.expect, got)

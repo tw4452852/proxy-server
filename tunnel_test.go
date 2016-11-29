@@ -8,17 +8,17 @@ import (
 
 func TestGetCtrRequest(t *testing.T) {
 	for name, c := range map[string]struct {
-		data   []byte
-		err    error
-		expect *Request
+		data      []byte
+		expectErr bool
+		expect    *Request
 	}{
 		"readErr": {
-			data: []byte{0},
-			err:  readTypeErr,
+			data:      []byte{0},
+			expectErr: true,
 		},
 		"unknownType": {
-			data: []byte{0x99, 0x99, 0, 1, 2},
-			err:  unknownTypeErr,
+			data:      []byte{0x99, 0x99, 0, 1, 2},
+			expectErr: true,
 		},
 		"CreateSSConnect": {
 			data: []byte{0, 1, 0, 2, 0x74, 0x77},
@@ -46,8 +46,8 @@ func TestGetCtrRequest(t *testing.T) {
 			t.Parallel()
 
 			got, err := GetCtrRequest(bytes.NewReader(c.data))
-			if err != c.err {
-				t.Errorf("expect error %s, but got %s", c.err, err)
+			if (err != nil) != c.expectErr {
+				t.Errorf("expect error %v, but got %v", c.expectErr, err)
 			}
 			if !reflect.DeepEqual(c.expect, got) {
 				t.Errorf("expect %#v, but got %#v", c.expect, got)
