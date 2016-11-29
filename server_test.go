@@ -74,6 +74,7 @@ func TestPollPlugin(t *testing.T) {
 	defer close(ret)
 
 	go func() {
+		s.pluginWaiter.Add(1)
 		s.pollPlugin()
 		ret <- struct{}{}
 	}()
@@ -101,6 +102,7 @@ func TestPollPlugin(t *testing.T) {
 
 	// mock done
 	go func() {
+		s.pluginWaiter.Add(1)
 		s.pollPlugin()
 		ret <- struct{}{}
 	}()
@@ -123,6 +125,7 @@ func TestPollTunnel(t *testing.T) {
 	defer close(ret)
 
 	go func() {
+		s.tunnelWaiter.Add(1)
 		s.pollTunnel()
 		ret <- struct{}{}
 	}()
@@ -159,6 +162,7 @@ func TestPollTunnel(t *testing.T) {
 
 	// mock done
 	go func() {
+		s.tunnelWaiter.Add(1)
 		s.pollTunnel()
 		ret <- struct{}{}
 	}()
@@ -186,6 +190,7 @@ func TestCheckTunnel(t *testing.T) {
 	checkTimeout = (expectCount + 1) * checkInterval
 
 	go func() {
+		s.tunnelWaiter.Add(1)
 		s.checkTunnel()
 		ret <- struct{}{}
 	}()
@@ -208,6 +213,7 @@ func TestCheckTunnel(t *testing.T) {
 
 	// mock done
 	go func() {
+		s.tunnelWaiter.Add(1)
 		s.checkTunnel()
 		ret <- struct{}{}
 	}()
@@ -326,6 +332,50 @@ func TestGetRequestTimeout(t *testing.T) {
 			_, err := s.getPluginRequest()
 			if err != nil {
 				t.Error(err)
+			}
+		},
+	} {
+		t.Run(name, f)
+	}
+}
+
+func TestReSetup(t *testing.T) {
+	Debug = true
+	ts := httptest.NewServer(nil)
+	defer ts.Close()
+
+	addr := ts.Listener.Addr().String()
+	s, err := NewServer("", "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.cancel()
+
+	s.tunnelAddr = addr
+	s.pluginAddr = addr
+
+	pollTimeout = 1 * time.Millisecond
+	for name, f := range map[string]func(*testing.T){
+		"tunnel": func(t *testing.T) {
+			err := s.setupTunnel()
+			if err != nil {
+				t.Fatal(err)
+			}
+			time.Sleep(2 * time.Millisecond)
+			err = s.setupTunnel()
+			if err != nil {
+				t.Fatal(err)
+			}
+		},
+		"plugin": func(t *testing.T) {
+			err := s.setupPlugin()
+			if err != nil {
+				t.Fatal(err)
+			}
+			time.Sleep(2 * time.Millisecond)
+			err = s.setupPlugin()
+			if err != nil {
+				t.Fatal(err)
 			}
 		},
 	} {

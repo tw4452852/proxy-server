@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -20,6 +21,7 @@ type srv struct {
 	tunnelErr    chan error
 	tunnelCtx    context.Context
 	tunnelCancel context.CancelFunc
+	tunnelWaiter sync.WaitGroup
 	lastRecvTime atomic.Value
 
 	pluginAddr   string
@@ -27,6 +29,7 @@ type srv struct {
 	pluginErr    chan error
 	pluginCtx    context.Context
 	pluginCancel context.CancelFunc
+	pluginWaiter sync.WaitGroup
 }
 
 var (
@@ -79,6 +82,7 @@ func (s *srv) setupPlugin() error {
 	// terminate old one
 	if s.pluginCancel != nil {
 		s.pluginCancel()
+		s.pluginWaiter.Wait()
 	}
 
 	conn, err := net.Dial("tcp", addr)
@@ -89,6 +93,7 @@ func (s *srv) setupPlugin() error {
 	s.pluginConn = conn
 	s.pluginCtx = ctx
 	s.pluginCancel = cancel
+	s.pluginWaiter.Add(1)
 
 	go s.pollPlugin()
 
@@ -98,6 +103,7 @@ func (s *srv) setupPlugin() error {
 func (s *srv) pollPlugin() {
 	defer func() {
 		s.pluginConn.Close()
+		s.pluginWaiter.Done()
 		Debug.Println("[server]: plugin poller exits")
 	}()
 
@@ -128,6 +134,7 @@ func (s *srv) setupTunnel() error {
 	// terminate old one
 	if s.tunnelCancel != nil {
 		s.tunnelCancel()
+		s.tunnelWaiter.Wait()
 	}
 
 	conn, err := net.Dial("tcp", addr)
@@ -138,6 +145,7 @@ func (s *srv) setupTunnel() error {
 	s.tunnelConn = conn
 	s.tunnelCtx = ctx
 	s.tunnelCancel = cancel
+	s.tunnelWaiter.Add(2)
 
 	go s.pollTunnel()
 	go s.checkTunnel()
@@ -148,6 +156,7 @@ func (s *srv) setupTunnel() error {
 func (s *srv) pollTunnel() {
 	defer func() {
 		s.tunnelConn.Close()
+		s.tunnelWaiter.Done()
 		Debug.Println("[server]: tunnel poller exits")
 	}()
 
@@ -176,8 +185,9 @@ func (s *srv) pollTunnel() {
 func (s *srv) checkTunnel() {
 	t := time.NewTicker(checkInterval)
 	defer func() {
-		Debug.Println("[server]: tunnel checker exit")
 		t.Stop()
+		s.tunnelWaiter.Done()
+		Debug.Println("[server]: tunnel checker exit")
 	}()
 
 	// set current time at first
