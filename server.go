@@ -30,8 +30,10 @@ type srv struct {
 }
 
 var (
-	checkInterval    = 1 * time.Second
-	checkTimeout     = 30 * time.Second
+	checkInterval = 1 * time.Second
+	checkTimeout  = 30 * time.Second
+	pollTimeout   = 1 * time.Second
+
 	tunnelTimeoutErr = errors.New("tunnel ping timeout")
 	setupPluginErr   = errors.New("setup plugin failed")
 	setupTunnelErr   = errors.New("setup tunnel failed")
@@ -291,17 +293,55 @@ func (s *srv) handleRequest(req *Request) error {
 
 // helpers
 func (s *srv) putCtrRequest(req *Request) error {
+	if s.tunnelConn == nil {
+		Debug.Printf("[server]: tunnel connection is nil, skip this request[%#v]\n", req)
+		return nil
+	}
 	return PutCtrRequest(s.tunnelConn, req)
 }
 
 func (s *srv) putPluginRequest(req *Request) error {
+	if s.pluginConn == nil {
+		Debug.Printf("[server]: plugin connection is nil, skip this request[%#v]\n", req)
+		return nil
+	}
 	return PutPluginRequest(s.pluginConn, req)
 }
 
 func (s *srv) getPluginRequest() (*Request, error) {
-	return GetPluginRequest(s.pluginConn)
+	if s.pluginConn == nil {
+		Debug.Printf("[server]: plugin connection is nil, skip request get")
+		return nil, nil
+	}
+	err := s.pluginConn.SetReadDeadline(time.Now().Add(pollTimeout))
+	if err != nil {
+		log.Printf("[server]: set plugin read deadline error: %v\n", err)
+	}
+	r, err := GetPluginRequest(s.pluginConn)
+	if err != nil {
+		ne, ok := err.(net.Error)
+		if ok && ne.Temporary() {
+			return nil, nil
+		}
+	}
+	return r, err
 }
 
 func (s *srv) getCtrRequest() (*Request, error) {
-	return GetCtrRequest(s.tunnelConn)
+	if s.tunnelConn == nil {
+		Debug.Printf("[server]: tunnel connection is nil, skip request get")
+		return nil, nil
+	}
+	err := s.tunnelConn.SetReadDeadline(time.Now().Add(pollTimeout))
+	if err != nil {
+		log.Printf("[server]: set tunnel read deadline error: %v\n", err)
+	}
+	r, err := GetCtrRequest(s.tunnelConn)
+	if err != nil {
+		ne, ok := err.(net.Error)
+		if ok && ne.Temporary() {
+			return nil, nil
+		}
+	}
+	return r, err
 }

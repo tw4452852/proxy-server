@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
@@ -291,5 +292,43 @@ func TestHandleRequest(t *testing.T) {
 				t.Error(err)
 			}
 		})
+	}
+}
+
+func TestGetRequestTimeout(t *testing.T) {
+	ts := httptest.NewServer(nil)
+	defer ts.Close()
+
+	addr := ts.Listener.Addr().String()
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	s, err := NewServer("", "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.cancel()
+
+	s.pluginConn = conn
+	s.tunnelConn = conn
+
+	pollTimeout = 1 * time.Millisecond
+	for name, f := range map[string]func(*testing.T){
+		"ctr": func(t *testing.T) {
+			_, err := s.getCtrRequest()
+			if err != nil {
+				t.Error(err)
+			}
+		},
+		"plugin": func(t *testing.T) {
+			_, err := s.getPluginRequest()
+			if err != nil {
+				t.Error(err)
+			}
+		},
+	} {
+		t.Run(name, f)
 	}
 }
