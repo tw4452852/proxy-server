@@ -202,7 +202,7 @@ func establishTunnel(conn net.Conn, reqAddr string) bool {
 		return false
 	}
 
-	var buf [32]byte
+	var buf [3]byte
 	n, err := conn.Read(buf[:])
 	if err != nil {
 		log.Printf("[ss]: read response failed: %s\n", err)
