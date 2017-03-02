@@ -1,4 +1,4 @@
-package main
+package proxy_server
 
 func agent() {
 	// todo
