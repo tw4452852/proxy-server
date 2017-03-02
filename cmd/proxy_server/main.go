@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	"github.com/tw4452852/proxy_server"
 )
 
 var (
@@ -18,7 +20,7 @@ func init() {
 	flag.StringVar(&clientControlAddr, "cc", "", "client control address")
 	flag.StringVar(&clientDataAddr, "cd", "", "client data address")
 	flag.StringVar(&pluginAddr, "p", "", "plugin address")
-	flag.BoolVar((*bool)(&Debug), "d", false, "debug log")
+	flag.BoolVar((*bool)(&proxy_server.Debug), "d", false, "debug log")
 }
 
 func main() {
@@ -41,9 +43,9 @@ func main() {
 		fmt.Println("plugin address is nil")
 		os.Exit(1)
 	}
-	Debug.SetPrefix("[" + pluginAddr + "]")
+	proxy_server.Debug.SetPrefix("[" + pluginAddr + "]")
 
-	s, err := NewServer(pluginAddr, clientControlAddr, clientDataAddr)
+	s, err := proxy_server.NewServer(pluginAddr, clientControlAddr, clientDataAddr)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
