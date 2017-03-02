@@ -3,6 +3,7 @@ package proxy_server
 import (
 	"io"
 	"log"
+	"net"
 )
 
 const (
@@ -15,7 +16,10 @@ const (
 func GetCtrRequest(r io.Reader) (*Request, error) {
 	tlv, err := ReadTLV(r)
 	if err != nil {
-		log.Printf("[tunnel]: read control request failed: %s\n", err)
+		ne, ok := err.(net.Error)
+		if !ok || !ne.Temporary() {
+			log.Printf("[tunnel]: read control request failed: %s\n", err)
+		}
 		return nil, err
 	}
 

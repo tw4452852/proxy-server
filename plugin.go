@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"net"
 )
 
 const (
@@ -20,7 +21,10 @@ var unknownTypeErr = errors.New("unknow type")
 func GetPluginRequest(r io.Reader) (*Request, error) {
 	tlv, err := ReadTLV(r)
 	if err != nil {
-		log.Printf("[plugin]: read request failed: %s\n", err)
+		ne, ok := err.(net.Error)
+		if !ok || !ne.Temporary() {
+			log.Printf("[plugin]: read request failed: %s\n", err)
+		}
 		return nil, err
 	}
 

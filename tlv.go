@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"net"
 )
 
 type TLV struct {
@@ -63,20 +64,29 @@ func ReadTLV(r io.Reader) (tlv TLV, err error) {
 
 	err = binary.Read(r, binary.BigEndian, &t)
 	if err != nil {
-		log.Printf("[tlv]: read type error: %s\n", err)
+		ne, ok := err.(net.Error)
+		if !ok || !ne.Temporary() {
+			log.Printf("[tlv]: read type error: %s\n", err)
+		}
 		return
 	}
 
 	err = binary.Read(r, binary.BigEndian, &l)
 	if err != nil {
-		log.Printf("[tlv]: read length error: %s\n", err)
+		ne, ok := err.(net.Error)
+		if !ok || !ne.Temporary() {
+			log.Printf("[tlv]: read length error: %s\n", err)
+		}
 		return
 	}
 
 	v = make([]byte, l)
 	err = binary.Read(r, binary.BigEndian, &v)
 	if err != nil {
-		log.Printf("[tlv]: read value error: %s\n", err)
+		ne, ok := err.(net.Error)
+		if !ok || !ne.Temporary() {
+			log.Printf("[tlv]: read value error: %s\n", err)
+		}
 		return
 	}
 
