@@ -3,6 +3,7 @@ package proxy_server
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net"
@@ -270,6 +271,7 @@ func getVmAddresses() (vmConfig, vmData string, err error) {
 		return
 	}
 	vmPlat := struct {
+		Code       string `json:"Code"`
 		VmPlatIP   string `json:"VmPlatIP"`
 		VmPlatPort string `json:"VmPlatPort"`
 	}{}
@@ -279,6 +281,10 @@ func getVmAddresses() (vmConfig, vmData string, err error) {
 		return
 	}
 	Debug.Printf("[web]: vm platform info: %#v\n", vmPlat)
+	if vmPlat.Code != "200" {
+		err = errors.New("failed to get vm platform info")
+		return
+	}
 
 	// get vm address
 	url = "http://" + vmPlat.VmPlatIP + ":" + vmPlat.VmPlatPort + "/AutoTestPlatform/GetVmAddr.action"
@@ -294,6 +300,7 @@ func getVmAddresses() (vmConfig, vmData string, err error) {
 		return
 	}
 	vm := struct {
+		Code       string `json:"Code"`
 		VmIP       string `json:"VmIP"`
 		VmCtrlPort string `json:"VmCtrlPort"`
 		VmDataPort string `json:"VmDataPort"`
@@ -304,6 +311,10 @@ func getVmAddresses() (vmConfig, vmData string, err error) {
 		return
 	}
 	Debug.Printf("[web]: vm info: %#v\n", vm)
+	if vm.Code != "200" {
+		err = errors.New("failed to get vm info")
+		return
+	}
 
 	return vm.VmIP + ":" + vm.VmCtrlPort, vm.VmIP + ":" + vm.VmDataPort, nil
 }
